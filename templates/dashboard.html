@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}My reports | RoadWatch{% endblock %}
+{% block content %}
+<div class="row-between">
+  <h1>My reports</h1>
+  <a class="btn btn-sign" href="{{ url_for('report_new') }}">Report an incident</a>
+</div>
+{% for r in reports %}
+  <a class="item" href="{{ url_for('report_view', rid=r._id) }}">
+    <div>
+      <strong>{{ r.category }}</strong>
+      {% if r.vehicle_number %}<span class="plate">{{ r.vehicle_number }}</span>{% endif %}
+      <p class="muted clip">{{ r.description }}</p>
+      <span class="muted">{{ r.created_at|dt }}</span>
+    </div>
+    <span class="pill s-{{ r.status }}">{{ STATUSES[r.status] }}</span>
+  </a>
+{% else %}
+  <p class="empty">You have not reported anything yet. When you see a vehicle endangering others, add a report with photo or video proof.</p>
+{% endfor %}
+{% endblock %}

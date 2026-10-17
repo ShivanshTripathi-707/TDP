@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}RoadWatch{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark" aria-hidden="true"></span>RoadWatch</a>
+  <nav>
+    {% if session.uid %}
+      {% if session.role == 'police' %}
+        <a href="{{ url_for('police_dashboard') }}">Control room</a>
+        <a href="{{ url_for('police_posts') }}">Notices</a>
+      {% else %}
+        <a href="{{ url_for('dashboard') }}">My reports</a>
+        <a class="btn btn-sign btn-sm" href="{{ url_for('report_new') }}">Report an incident</a>
+      {% endif %}
+      <form method="post" action="{{ url_for('logout') }}" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="link-btn" type="submit">Log out ({{ session.name.split()[0] }})</button>
+      </form>
+    {% else %}
+      <a href="{{ url_for('login') }}">Log in</a>
+      <a class="btn btn-sign btn-sm" href="{{ url_for('register') }}">Create account</a>
+    {% endif %}
+  </nav>
+</header>
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+  {% if msgs %}
+  <div class="flashes" role="status">
+    {% for cat, m in msgs %}<div class="flash flash-{{ cat }}">{{ m }}</div>{% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+{% block hero %}{% endblock %}
+<main class="wrap">{% block content %}{% endblock %}</main>
+<footer class="foot">RoadWatch: citizen reports for safer roads. Reports are reviewed by the police before any action is taken.</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

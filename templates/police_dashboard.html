@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Control room | RoadWatch{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<h1>Control room</h1>
+<div class="stat-row">
+  {% for k, label in STATUSES.items() %}
+    <a class="stat s-{{ k }}" href="{{ url_for('police_dashboard', status=k) }}"><b>{{ counts[k] }}</b>{{ label }}</a>
+  {% endfor %}
+</div>
+
+<form class="filters" method="get">
+  <input name="q" value="{{ f.q }}" placeholder="Search plate, text or landmark">
+  <select name="status">
+    <option value="">All statuses</option>
+    {% for k, label in STATUSES.items() %}<option value="{{ k }}" {{ 'selected' if f.status == k }}>{{ label }}</option>{% endfor %}
+  </select>
+  <select name="category">
+    <option value="">All problems</option>
+    {% for c in CATEGORIES %}<option value="{{ c }}" {{ 'selected' if f.category == c }}>{{ c }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-dark btn-sm" type="submit">Filter</button>
+  <a class="btn btn-ghost-dark btn-sm" href="{{ url_for('police_dashboard') }}">Clear</a>
+</form>
+
+<div id="map" class="map map-tall"></div>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Received</th><th>Problem</th><th>Plate</th><th>Reporter</th><th>PIN</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ r.created_at|dt }}</td>
+      <td>{{ r.category }}</td>
+      <td>{% if r.vehicle_number %}<span class="plate">{{ r.vehicle_number }}</span>{% else %}<span class="muted">none</span>{% endif %}</td>
+      <td>{{ r.user.name }}<br><span class="muted">{{ r.user.phone }}</span></td>
+      <td>{{ r.user.pincode }}</td>
+      <td><span class="pill s-{{ r.status }}">{{ STATUSES[r.status] }}</span></td>
+      <td><a href="{{ url_for('report_view', rid=r._id) }}">Open</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="empty">No reports match these filters.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const pts = {{ points|tojson }};
+  const map = L.map('map').setView([20.59, 78.96], 5);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+  const bounds = [];
+  pts.forEach(p => {
+    L.circleMarker([p.lat, p.lng], {radius: 9, color: '#1d2329', weight: 2, fillColor: p.color, fillOpacity: 0.95})
+      .addTo(map)
+      .bindPopup('<b>' + p.cat + '</b><br>' + (p.vehicle || 'No plate') + '<br><a href="' + p.url + '">Open report</a>');
+    bounds.push([p.lat, p.lng]);
+  });
+  if (bounds.length) map.fitBounds(bounds, {padding: [30, 30], maxZoom: 15});
+</script>
+{% endblock %}

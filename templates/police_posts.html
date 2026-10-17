@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Notices | RoadWatch{% endblock %}
+{% block content %}
+<h1>Public notices</h1>
+<section class="card">
+  <h2>Publish a notice</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Title<input name="title" maxlength="120" required></label>
+    <label>Message<textarea name="body" rows="4" maxlength="2000" required></textarea></label>
+    <button class="btn btn-dark" type="submit">Publish on home page</button>
+  </form>
+</section>
+{% for p in posts %}
+  <article class="notice">
+    <h3>{{ p.title }}</h3>
+    <p>{{ p.body }}</p>
+    <span class="muted">{{ p.author }}, {{ p.created_at|dt }}</span>
+    <form method="post" action="{{ url_for('police_post_delete', pid=p._id) }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="link-btn danger" type="submit">Remove</button>
+    </form>
+  </article>
+{% else %}
+  <p class="empty">No notices published yet.</p>
+{% endfor %}
+{% endblock %}

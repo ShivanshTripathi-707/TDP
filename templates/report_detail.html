@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Report details | RoadWatch{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+{% set lat = r.location.coordinates[1] %}{% set lng = r.location.coordinates[0] %}
+<div class="row-between">
+  <h1>{{ r.category }}</h1>
+  <span class="pill s-{{ r.status }}">{{ STATUSES[r.status] }}</span>
+</div>
+<p class="muted">Submitted {{ r.created_at|dt }}{% if r.vehicle_number %} &nbsp;Vehicle <span class="plate">{{ r.vehicle_number }}</span>{% endif %}</p>
+
+<section class="card">
+  <h2>Description</h2>
+  <p class="pre">{{ r.description }}</p>
+  {% if r.landmark %}<p><strong>Landmark:</strong> {{ r.landmark }}</p>{% endif %}
+</section>
+
+<section class="card">
+  <h2>Proof</h2>
+  <div class="media-grid">
+    {% for m in r.media %}
+      {% if m.type == 'video' %}
+        <video controls preload="metadata" src="{{ url_for('media', name=m.filename) }}"></video>
+      {% else %}
+        <a href="{{ url_for('media', name=m.filename) }}" target="_blank" rel="noopener"><img src="{{ url_for('media', name=m.filename) }}" alt="Uploaded proof"></a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>Incident location</h2>
+  <p class="muted">Taken from the reporter's device at upload time (accuracy about {{ r.accuracy_m|round|int }} m).</p>
+  <div id="map" class="map"></div>
+  <p><a href="https://www.google.com/maps?q={{ lat }},{{ lng }}" target="_blank" rel="noopener">Open in Google Maps</a>
+     <span class="muted">({{ '%.5f'|format(lat) }}, {{ '%.5f'|format(lng) }})</span></p>
+</section>
+
+{% if is_police %}
+<section class="card police">
+  <h2>Reporter details</h2>
+  <dl class="kv">
+    <dt>Name</dt><dd>{{ reporter.name }}</dd>
+    <dt>Phone</dt><dd><a href="tel:{{ reporter.phone }}">{{ reporter.phone }}</a></dd>
+    <dt>Email</dt><dd>{{ reporter.email }}</dd>
+    <dt>Aadhaar</dt><dd>XXXX XXXX {{ reporter.aadhaar_last4 }}</dd>
+    <dt>Address</dt><dd>{{ reporter.address }}, {{ reporter.pincode }}</dd>
+    <dt>Upload IP</dt><dd>{{ r.ip }}</dd>
+  </dl>
+</section>
+
+<section class="card police">
+  <h2>AI analysis</h2>
+  {% if r.ai_analysis %}<pre class="pre">{{ r.ai_analysis }}</pre>
+  {% else %}<p class="muted">Not available yet. Plug a model into <code>ai_hooks.py</code> to fill this in.</p>{% endif %}
+</section>
+
+<section class="card police">
+  <h2>Decision</h2>
+  <form method="post" action="{{ url_for('report_update', rid=r._id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Status
+      <select name="status">
+        {% for k, label in STATUSES.items() %}<option value="{{ k }}" {{ 'selected' if r.status == k }}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Note <span class="muted">(visible to police only)</span>
+      <textarea name="note" rows="3" maxlength="1000"></textarea>
+    </label>
+    <button class="btn btn-dark" type="submit">Save decision</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>History</h2>
+  {% for h in r.history|reverse %}
+    <p><span class="pill s-{{ h.status }}">{{ STATUSES[h.status] }}</span>
+       <span class="muted">{{ h.at|dt }}{% if is_police %}, {{ h.by }}{% endif %}</span>
+       {% if is_police and h.note %}<br>{{ h.note }}{% endif %}</p>
+  {% else %}
+    <p class="muted">No decision yet. Police will review this report.</p>
+  {% endfor %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const pos = [{{ lat }}, {{ lng }}];
+  const map = L.map('map').setView(pos, 16);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'}).addTo(map);
+  L.marker(pos).addTo(map);
+</script>
+{% endblock %}

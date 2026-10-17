@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block hero %}
+<section class="hero">
+  <div class="hero-in">
+    <h1>See a vehicle putting people at risk? Show the police.</h1>
+    <p>Heavy smoke, rash driving, road rage. Take a photo or short video, add what happened, and your location goes with it. Police review every report.</p>
+    <div class="hero-cta">
+      {% if session.uid and session.role == 'citizen' %}
+        <a class="btn btn-sign" href="{{ url_for('report_new') }}">Report an incident</a>
+      {% elif not session.uid %}
+        <a class="btn btn-sign" href="{{ url_for('register') }}">Create an account</a>
+        <a class="btn btn-ghost" href="{{ url_for('login') }}">Log in</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="lane" aria-hidden="true"></div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="steps">
+  <h2>How it works</h2>
+  <ol>
+    <li><strong>Sign up once.</strong> Verify your email with a 6-digit code.</li>
+    <li><strong>Capture proof.</strong> Add photos or video and describe the problem.</li>
+    <li><strong>Police review.</strong> Officers see the proof, the location and mark the report genuine or not.</li>
+  </ol>
+</section>
+
+<section>
+  <div class="row-between"><h2>Notices from police</h2>
+    <span class="muted">{{ stats.total }} reports received, {{ stats.acted }} acted on</span></div>
+  {% for n in notices %}
+    <article class="notice">
+      <h3>{{ n.title }}</h3>
+      <p>{{ n.body }}</p>
+      <span class="muted">{{ n.author }}, {{ n.created_at|dt }}</span>
+    </article>
+  {% else %}
+    <p class="empty">No notices yet. Police advisories will appear here.</p>
+  {% endfor %}
+</section>
+{% endblock %}

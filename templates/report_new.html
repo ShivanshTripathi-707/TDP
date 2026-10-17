@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Report an incident | RoadWatch{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Report an incident</h1>
+  <form method="post" enctype="multipart/form-data" id="report-form" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="lat" id="lat">
+    <input type="hidden" name="lng" id="lng">
+    <input type="hidden" name="accuracy" id="accuracy">
+
+    <div class="grid2">
+      <label>What is the problem?
+        <select name="category" required>
+          <option value="">Choose one</option>
+          {% for c in CATEGORIES %}<option value="{{ c }}" {{ 'selected' if v.category == c }}>{{ c }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Vehicle number <span class="muted">(if visible)</span>
+        <input name="vehicle_number" value="{{ v.vehicle_number }}" placeholder="AP39TX1234" maxlength="14" autocapitalize="characters">
+      </label>
+    </div>
+
+    <label>What happened?
+      <textarea name="description" rows="4" maxlength="1500" required placeholder="Describe the vehicle, what it did, and how it affected people.">{{ v.description }}</textarea>
+    </label>
+
+    <label>Nearby landmark <span class="muted">(optional)</span>
+      <input name="landmark" value="{{ v.landmark }}" maxlength="200" placeholder="Opposite the bus stand, near the flyover">
+    </label>
+
+    <label>Photos or video <span class="muted">(up to 5 files, 60 MB total)</span>
+      <input type="file" name="media" id="media" accept="image/*,video/*" multiple required>
+    </label>
+    <div id="previews" class="previews"></div>
+
+    <div class="loc loc-wait" id="loc-status" aria-live="polite">Finding your location...</div>
+    <button type="button" class="link-btn" id="loc-retry" hidden>Try location again</button>
+    <small class="hint">Your current location is saved with the report so police can find the place. Only police can see it.</small>
+
+    <button class="btn btn-dark" type="submit" id="submit-btn" disabled>Submit report</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/report.js') }}"></script>{% endblock %}

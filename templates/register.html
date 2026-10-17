@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Create account | RoadWatch{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>Create your account</h1>
+  <p class="muted">Police need to know who sent a report, so every reporter is identified. Your details are never shown publicly.</p>
+  <form method="post" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Full name<input name="name" value="{{ v.name }}" autocomplete="name" required></label>
+    <div class="grid2">
+      <label>Email<input type="email" name="email" value="{{ v.email }}" autocomplete="email" required></label>
+      <label>Mobile number<input name="phone" value="{{ v.phone }}" inputmode="numeric" maxlength="14" placeholder="10 digits" autocomplete="tel" required></label>
+    </div>
+    <label>Aadhaar number<input name="aadhaar" value="{{ v.aadhaar }}" inputmode="numeric" maxlength="14" placeholder="12 digits" required></label>
+    <small class="hint">We keep only the last 4 digits and a one-way hash to stop duplicate accounts.</small>
+    <label>Address<textarea name="address" rows="2" autocomplete="street-address" required>{{ v.address }}</textarea></label>
+    <label>PIN code<input name="pincode" value="{{ v.pincode }}" inputmode="numeric" maxlength="6" required></label>
+    <div class="grid2">
+      <label>Password<input type="password" name="password" minlength="8" autocomplete="new-password" required></label>
+      <label>Confirm password<input type="password" name="confirm" minlength="8" autocomplete="new-password" required></label>
+    </div>
+    <button class="btn btn-dark" type="submit">Send verification code</button>
+  </form>
+  <p class="muted">Already registered? <a href="{{ url_for('login') }}">Log in</a></p>
+</section>
+{% endblock %}
